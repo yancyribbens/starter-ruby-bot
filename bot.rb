@@ -56,6 +56,9 @@ client.on :message do |data|
     client.message channel: data['channel'], text: help
     logger.debug("A call for help")
 
+  when /.*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
+		puts "uuid detected"
+
   when /^bot/ then
     client.message channel: data['channel'], text: "Sorry <@#{data['user']}>, I don\'t understand. \n#{help}"
     logger.debug("Unknown command")
