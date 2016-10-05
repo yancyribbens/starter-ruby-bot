@@ -1,6 +1,7 @@
 require 'slack-ruby-client'
 require 'logging'
 require 'httparty'
+require 'pry'
 
 logger = Logging.logger(STDOUT)
 logger.level = :debug
@@ -30,11 +31,25 @@ client.on :channel_joined do |data|
   end
 end
 
+def match_uuid(data)
+	data.match(/.*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/)[1]
+end
+
 def acclaim_badge(data)
-	badge_id = data.match(/.*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/)[1]
+	badge_id = match_uuid(data)
 	if badge_id
 		HTTParty.get(
 			"https://api.youracclaim.com/v1/organizations/adbb05be-a298-44ab-88c7-e7e11af5f345/badges/#{badge_id}",
+			:basic_auth => { :username => ENV['ACCLAIM_TOKEN'], :password => '' }
+		)
+	end
+end
+
+def acclaim_badge_template(data)
+	badge_template_id = match_uuid(data)
+	if badge_template_id
+		HTTParty.get(
+			"https://api.youracclaim.com/v1/organizations/adbb05be-a298-44ab-88c7-e7e11af5f345/badge_templates/#{badge_template_id}",
 			:basic_auth => { :username => ENV['ACCLAIM_TOKEN'], :password => '' }
 		)
 	end
@@ -69,6 +84,13 @@ client.on :message do |data|
 
   when /.*badge ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
 		response = acclaim_badge(data['text'])
+		url = response.dig('data', 'image', 'url') 
+		if url 
+			client.message channel: data['channel'], text: response['data']['image']['url']
+		end
+
+  when /.*badge template ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
+		response = acclaim_badge_template(data['text'])
 		url = response.dig('data', 'image', 'url') 
 		if url 
 			client.message channel: data['channel'], text: response['data']['image']['url']
