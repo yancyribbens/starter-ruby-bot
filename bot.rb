@@ -49,7 +49,7 @@ client.on :message do |data|
     logger.debug("Attachment message posted")
 
   when bot_mentioned(client)
-    client.message channel: data['channel'], text: 'You really do care about me. :heart: :heart:'
+    client.message channel: data['channel'], text: 'You really do care about me. :heart:'
     logger.debug("Bot mentioned in channel #{data['channel']}")
 
   when 'bot help', 'help' then
@@ -57,7 +57,7 @@ client.on :message do |data|
     logger.debug("A call for help")
 
   when /.*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
-    client.message channel: data['channel'], text: "uuid detected"
+    client.message channel: data['channel'], text: "uuid detected #{ENV['SECRET']}"
 
   when /^bot/ then
     client.message channel: data['channel'], text: "Sorry <@#{data['user']}>, I don\'t understand. \n#{help}"
