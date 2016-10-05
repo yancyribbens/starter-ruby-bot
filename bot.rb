@@ -1,5 +1,7 @@
 require 'slack-ruby-client'
 require 'logging'
+require 'pry'
+require 'httparty'
 
 logger = Logging.logger(STDOUT)
 logger.level = :debug
@@ -27,6 +29,16 @@ client.on :channel_joined do |data|
   else
     logger.debug("Someone far less important than #{client.self['name']} joined #{data['channel']['id']}")
   end
+end
+
+def acclaim_badge(data)
+	badge_id = data.match(/.*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/)[1]
+	if badge_id
+		HTTParty.get(
+			"https://api.youracclaim.com/v1/organizations/adbb05be-a298-44ab-88c7-e7e11af5f345/badges/#{badge_id}",
+			:basic_auth => { :username => ENV['ACCLAIM_TOKEN'], :password => '' }
+		)
+	end
 end
 
 # listen for message event - https://api.slack.com/events/message
@@ -57,7 +69,11 @@ client.on :message do |data|
     logger.debug("A call for help")
 
   when /.*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
-    client.message channel: data['channel'], text: "uuid detected #{ENV['SECRET']}"
+    client.message channel: data['channel'], text: "That looks like a badge!"
+		response = acclaim_badge(data['text'])
+		if response['data'] && response['data']['image'] && response['data']['image']['url']
+			client.message channel: data['channel'], text: response['data']['image']['url']
+		end
 
   when /^bot/ then
     client.message channel: data['channel'], text: "Sorry <@#{data['user']}>, I don\'t understand. \n#{help}"
