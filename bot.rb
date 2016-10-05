@@ -67,10 +67,10 @@ client.on :message do |data|
     client.message channel: data['channel'], text: help
     logger.debug("A call for help")
 
-  when /.*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
-    client.message channel: data['channel'], text: "That looks like a badge!"
+  when /.*badge ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
 		response = acclaim_badge(data['text'])
-		if response['data'] && response['data']['image'] && response['data']['image']['url']
+		url = response.dig('data', 'image', 'url') 
+		if url 
 			client.message channel: data['channel'], text: response['data']['image']['url']
 		end
 
