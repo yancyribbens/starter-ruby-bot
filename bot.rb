@@ -104,11 +104,12 @@ client.on :message do |data|
     logger.debug("A call for help")
 
   when /.*badge ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
-		response = acclaim_badge(data['text'])
-		url = response.dig('data', 'image', 'url') 
-		if url 
-			client.message channel: data['channel'], text: response['data']['image']['url']
-		end
+    client.message channel: data['channel'], text: 'under construction'
+		#response = acclaim_badge(data['text'])
+		#url = response.dig('data', 'image', 'url') 
+		#if url 
+			#client.message channel: data['channel'], text: response['data']['image']['url']
+		#end
 
   when /.*badge template ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
     client.web_client.chat_postMessage(
