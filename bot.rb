@@ -5,6 +5,7 @@ require 'httparty'
 logger = Logging.logger(STDOUT)
 logger.level = :debug
 
+
 Slack.configure do |config|
   config.token = ENV['SLACK_TOKEN']
   if not config.token
