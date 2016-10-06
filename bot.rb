@@ -1,6 +1,7 @@
 require 'slack-ruby-client'
 require 'logging'
 require 'httparty'
+require 'pry'
 
 logger = Logging.logger(STDOUT)
 logger.level = :debug
@@ -54,12 +55,22 @@ def acclaim_badge_template(data)
 	end
 end
 
+def standard_size_image_url(url)
+  uri = URI(url)
+  path_array = uri.path.split('/')
+  file = path_array.pop
+  new_file = 'standard_' + file
+  new_path = (path_array.push new_file).join('/')
+  uri.path = new_path
+  uri.to_s
+end
+
 def template_to_attachment(data)
   template = acclaim_badge_template(data)
   [
     {
       title: template["data"]["name"],
-      image_url: template["data"]["image"],
+      image_url: standard_size_image_url(template["data"]["image"]["url"]),
       title_link: template["data"]["url"],
       text: template["data"]["description"]
     }
