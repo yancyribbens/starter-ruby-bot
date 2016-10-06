@@ -54,6 +54,18 @@ def acclaim_badge_template(data)
 	end
 end
 
+def template_to_attachment(data)
+  template = acclaim_badge_template(data)
+  [
+    {
+      title: template["data"]["name"],
+      image_url: template["data"]["image"],
+      title_link: template["data"]["url"],
+      text: template["data"]["description"]
+    }
+  ]
+end
+
 # listen for message event - https://api.slack.com/events/message
 client.on :message do |data|
 
@@ -89,11 +101,40 @@ client.on :message do |data|
 		end
 
   when /.*badge template ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
-		response = acclaim_badge_template(data['text'])
-		url = response.dig('data', 'image', 'url') 
-		if url 
-			client.message channel: data['channel'], text: response['data']['image']['url']
-		end
+    client.web_client.chat_postMessage(
+      {
+        channel: data['channel'],
+        as_user: true,
+        attachments: template_to_attachment(data['text'])
+      }
+    )
+
+		#client.web_client.chat_postMessage(
+		#{
+			#channel: data['channel'],
+			#as_user: true,
+			#attachments: [
+        #{
+            #"fallback": "Required plain-text summary of the attachment.",
+            #"color": "#36a64f",
+            #"author_name": "Acclaim",
+            #"title": "Acclaim Early Adopter",
+						#"image_url": "https://acclaim-production-app.s3.amazonaws.com/images/482a8c1c-b984-41aa-b30a-3a038fa1e7cc/standard_bcfff5e98770d9ee81a517561c72b8f0f9b9fa6f.png",
+            #"text": "An achievement for individuals who dedicated time and energy into helping Acclaim launch. While this badge may not have much in terms of value or rigor, it does recognize an individual's dedication to being a team player and helping when asked.",
+            #"footer": "Slack API",
+            #"footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
+            #"ts": 123456789
+        #}
+      #]
+		#}
+		#)
+		#client.message channel: data['channel'], attachments: '[{"pretext": "pre-hello", "text": "text-world"}]'
+ 
+		#response = acclaim_badge_template(data['text'])
+		#url = response.dig('data', 'image', 'url') 
+		#if url 
+			#client.message channel: data['channel'], text: response['data']['image']['url']
+		#end
 
   when /^bot/ then
     client.message channel: data['channel'], text: "Sorry <@#{data['user']}>, I don\'t understand. \n#{help}"
