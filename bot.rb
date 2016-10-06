@@ -1,6 +1,7 @@
 require 'slack-ruby-client'
 require 'logging'
 require 'httparty'
+require 'pry'
 
 logger = Logging.logger(STDOUT)
 logger.level = :debug
@@ -44,13 +45,18 @@ def acclaim_badge(data)
 	end
 end
 
+def badge_template_request(id)
+  HTTParty.get(
+      "https://api.youracclaim.com/v1/organizations/adbb05be-a298-44ab-88c7-e7e11af5f345/badge_templates/#{id}",
+			:basic_auth => { :username => ENV['ACCLAIM_TOKEN'], :password => '' }
+  )
+end
+
 def acclaim_badge_template(data)
 	badge_template_id = match_uuid(data)
 	if badge_template_id
-		HTTParty.get(
-			"https://api.youracclaim.com/v1/organizations/adbb05be-a298-44ab-88c7-e7e11af5f345/badge_templates/#{badge_template_id}",
-			:basic_auth => { :username => ENV['ACCLAIM_TOKEN'], :password => '' }
-		)
+    response = badge_template_request(badge_template_id)
+    response if response.code == 200
 	end
 end
 
@@ -66,14 +72,20 @@ end
 
 def template_to_attachment(data)
   template = acclaim_badge_template(data)
-  [
-    {
-      title: template["data"]["name"],
-      image_url: standard_size_image_url(template["data"]["image"]["url"]),
-      title_link: template["data"]["url"],
-      text: template["data"]["description"]
+  if template
+    { attachments:
+      [
+        {
+          title: template["data"]["name"],
+          image_url: standard_size_image_url(template["data"]["image"]["url"]),
+          title_link: template["data"]["url"],
+          text: template["data"]["description"]
+        }
+      ]
     }
-  ]
+  else
+    { text: 'oops something went wrong :(' }
+  end
 end
 
 # listen for message event - https://api.slack.com/events/message
@@ -112,12 +124,12 @@ client.on :message do |data|
 		#end
 
   when /.*badge template ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/ then
+    
     client.web_client.chat_postMessage(
       {
         channel: data['channel'],
-        as_user: true,
-        attachments: template_to_attachment(data['text'])
-      }
+        as_user: true
+      }.merge(template_to_attachment(data['text']))
     )
 
 		#client.web_client.chat_postMessage(
