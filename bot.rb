@@ -1,7 +1,6 @@
 require 'slack-ruby-client'
 require 'logging'
 require 'httparty'
-require 'pry'
 
 logger = Logging.logger(STDOUT)
 logger.level = :debug
