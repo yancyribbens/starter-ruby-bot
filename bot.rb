@@ -31,6 +31,7 @@ client.on :channel_joined do |data|
   end
 end
 
+
 def match_uuid(data)
 	data.match(/.*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*/)[1]
 end
